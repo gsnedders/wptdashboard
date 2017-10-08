@@ -14,8 +14,9 @@ def main():
         'sauce_key': os.environ['SAUCE_KEY'],
         'sauce_user': os.environ['SAUCE_USER'],
         'sauce_connect_path': '/sc-4.4.9-linux/bin/sc',
-        'sauce_tunnel_id': 'rutabaga', # TODO change
+        'sauce_tunnel_id': 'rutabaga', # TODO generate this based on platform, time
         'wpt_path': '/web-platform-tests',
+        'local_report_filepath': '/wptreport.log',
     }
 
     # Hack because Sauce expects a different name
@@ -29,19 +30,34 @@ def main():
 
     patch_wpt(config, platform)
 
-    path = 'cookies' # TODO parameterize this
-    run_command('./wpt', 'run', product, path,
-        '--sauce-platform=%s' % platform['os_name'],
-        '--sauce-key=%s' % config['sauce_key'],
-        '--sauce-user=%s' % config['sauce_user'],
-        '--sauce-connect-binary=%s' % config['sauce_connect_path'],
-        # '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
-        '--no-restart-on-unexpected',
-        # '--processes=2',
-        '--run-by-dir=3',
-        '--no-manifest-update', # TODO JUST FOR DEBUGGING
+    path = 'gamepad' # TODO parameterize this
+    subprocess.call([
+            './wpt', 'run', product, path,
+            '--sauce-platform=%s' % platform['os_name'],
+            '--sauce-key=%s' % config['sauce_key'],
+            '--sauce-user=%s' % config['sauce_user'],
+            # '--sauce-connect-binary=%s' % config['sauce_connect_path'],
+            '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
+            '--no-restart-on-unexpected',
+            # '--processes=2',
+            '--run-by-dir=3',
+            '--no-manifest-update', # TODO JUST FOR DEBUGGING
+            '--log-mach=-',
+            '--log-wptreport=%s' % config['local_report_filepath'],
+            '--install-fonts'
+        ],
         cwd='/web-platform-tests'
     )
+
+    with open(config['local_report_filepath']) as f:
+        report = json.load(f)
+
+    assert len(report['results']) > 0, (
+        '0 test results, something went wrong, stopping.')
+
+    summary = report_to_summary(report)
+    print 'WOOOOOOOOOOOOOOOOOOOOOOO!!!!!'
+    print summary # TODO remove this before removing path!
 
 
 def add_hosts():
@@ -59,6 +75,7 @@ def add_hosts():
             f.write('%s\n' % host)
 
 
+# TODO remove this
 def run_command(*args, **kwargs):
     return_code = subprocess.check_call(args, cwd=kwargs.get('cwd', '/'))
     assert return_code == 0, (
@@ -97,6 +114,28 @@ def get_and_validate_platform():
     assert platform_id, 'PLATFORM_ID env var required'
     assert platform_id in browsers, 'PLATFORM_ID not found in browsers.json'
     return browsers.get(platform_id)
+
+
+def report_to_summary(wpt_report):
+    test_files = {}
+
+    for result in wpt_report['results']:
+        test_file = result['test']
+        assert test_file not in test_files, (
+            'Assumption that each test_file only shows up once broken!')
+
+        if result['status'] in ('OK', 'PASS'):
+            test_files[test_file] = [1, 1]
+        else:
+            test_files[test_file] = [0, 1]
+
+        for subtest in result['subtests']:
+            if subtest['status'] == 'PASS':
+                test_files[test_file][0] += 1
+
+            test_files[test_file][1] += 1
+
+    return test_files
 
 
 if __name__ == '__main__':
