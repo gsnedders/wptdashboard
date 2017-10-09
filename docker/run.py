@@ -25,29 +25,31 @@ def main():
         sauce_browser_name = 'MicrosoftEdge'
     else:
         sauce_browser_name = platform['browser_name']
-
     product = 'sauce:%s:%s' % (sauce_browser_name, platform['browser_version'])
 
     patch_wpt(config, platform)
 
-    path = 'gamepad' # TODO parameterize this
-    subprocess.call([
-            './wpt', 'run', product, path,
-            '--sauce-platform=%s' % platform['os_name'],
-            '--sauce-key=%s' % config['sauce_key'],
-            '--sauce-user=%s' % config['sauce_user'],
-            # '--sauce-connect-binary=%s' % config['sauce_connect_path'],
-            '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
-            '--no-restart-on-unexpected',
-            # '--processes=2',
-            '--run-by-dir=3',
-            '--no-manifest-update', # TODO JUST FOR DEBUGGING
-            '--log-mach=-',
-            '--log-wptreport=%s' % config['local_report_filepath'],
-            '--install-fonts'
-        ],
-        cwd='/web-platform-tests'
-    )
+    command = [
+        './wpt', 'run', product,
+        '--sauce-platform=%s' % platform['os_name'],
+        '--sauce-key=%s' % config['sauce_key'],
+        '--sauce-user=%s' % config['sauce_user'],
+        # There's a bug in wptrunner if you supply this
+        # By default it will download SC, which is okay
+        # '--sauce-connect-binary=%s' % config['sauce_connect_path'],
+        '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
+        '--no-restart-on-unexpected',
+        # '--processes=2',
+        '--run-by-dir=3',
+        '--no-manifest-update', # TODO JUST FOR DEBUGGING
+        '--log-mach=-',
+        '--log-wptreport=%s' % config['local_report_filepath'],
+        '--install-fonts'
+    ]
+    if os.environ['RUN_PATH']:
+        command.insert(3, os.environ['RUN_PATH'])
+
+    subprocess.call(command, cwd='/web-platform-tests')
 
     with open(config['local_report_filepath']) as f:
         report = json.load(f)
