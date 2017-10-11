@@ -1,11 +1,11 @@
 import json
 import os
 import subprocess
+import time
 
 
 def main():
-    add_hosts()
-    platform = get_and_validate_platform()
+    platform_id, platform = get_and_validate_platform()
 
     assert os.environ['SAUCE_KEY'], 'SAUCE_KEY env var required'
     assert os.environ['SAUCE_USER'], 'SAUCE_USER env var required'
@@ -13,10 +13,9 @@ def main():
     config = {
         'sauce_key': os.environ['SAUCE_KEY'],
         'sauce_user': os.environ['SAUCE_USER'],
-        'sauce_connect_path': '/sc-4.4.9-linux/bin/sc',
-        'sauce_tunnel_id': 'rutabaga', # TODO generate this based on platform, time
-        'wpt_path': '/web-platform-tests',
-        'local_report_filepath': '/wptreport.log',
+        'sauce_tunnel_id': '%s_%s' % (platform_id, time.time()),
+        'wpt_path': os.path.expanduser('~/web-platform-tests'),
+        'local_report_filepath': os.path.expanduser('~/wptreport.log')
     }
 
     # Hack because Sauce expects a different name
@@ -49,7 +48,7 @@ def main():
     if os.environ['RUN_PATH']:
         command.insert(3, os.environ['RUN_PATH'])
 
-    subprocess.call(command, cwd='/web-platform-tests')
+    subprocess.call(command, cwd=config['wpt_path'])
 
     with open(config['local_report_filepath']) as f:
         report = json.load(f)
@@ -62,29 +61,6 @@ def main():
     print summary # TODO remove this before removing path!
 
 
-def add_hosts():
-    hosts = [
-        '127.0.0.1 web-platform.test',
-        '127.0.0.1 www.web-platform.test',
-        '127.0.0.1 www1.web-platform.test',
-        '127.0.0.1 www2.web-platform.test',
-        '127.0.0.1 xn--n8j6ds53lwwkrqhv28a.web-platform.test',
-        '127.0.0.1 xn--lve-6lad.web-platform.test',
-        '0.0.0.0 nonexistent-origin.web-platform.test',
-    ]
-    with open('/etc/hosts', 'w') as f:
-        for host in hosts:
-            f.write('%s\n' % host)
-
-
-# TODO remove this
-def run_command(*args, **kwargs):
-    return_code = subprocess.check_call(args, cwd=kwargs.get('cwd', '/'))
-    assert return_code == 0, (
-        'Got non-0 return code: '
-        '%d from command %s' % (return_code, command))
-
-
 def patch_wpt(config, platform):
     """Applies util/wpt.patch to WPT.
 
@@ -92,7 +68,7 @@ def patch_wpt(config, platform):
     jeffcarp has a PR out with this patch:
     https://github.com/w3c/web-platform-tests/pull/5774
     """
-    with open('/wpt.patch') as f:
+    with open(os.expenduser('~/wptdashboard/wpt.patch')) as f:
         patch = f.read()
 
     # The --sauce-platform command line arg doesn't
@@ -115,7 +91,7 @@ def get_and_validate_platform():
     platform_id = os.environ['PLATFORM_ID']
     assert platform_id, 'PLATFORM_ID env var required'
     assert platform_id in browsers, 'PLATFORM_ID not found in browsers.json'
-    return browsers.get(platform_id)
+    return platform_id, browsers.get(platform_id)
 
 
 def report_to_summary(wpt_report):
