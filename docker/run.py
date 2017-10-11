@@ -68,7 +68,7 @@ def patch_wpt(config, platform):
     jeffcarp has a PR out with this patch:
     https://github.com/w3c/web-platform-tests/pull/5774
     """
-    with open(os.expenduser('~/wptdashboard/wpt.patch')) as f:
+    with open(os.expanduser('~/wptdashboard/wpt.patch')) as f:
         patch = f.read()
 
     # The --sauce-platform command line arg doesn't
