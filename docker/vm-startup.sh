@@ -1,7 +1,7 @@
 METADATA=http://metadata.google.internal/computeMetadata/v1
-SVC_ACCT=$METADATA/instance/service-accounts/default
-ACCESS_TOKEN=$(curl -H 'Metadata-Flavor: Google' $SVC_ACCT/token | cut -d'"' -f 4)
-docker login -u _token -p $ACCESS_TOKEN https://gcr.io
+# SVC_ACCT=$METADATA/instance/service-accounts/default
+# ACCESS_TOKEN=$(curl -H 'Metadata-Flavor: Google' $SVC_ACCT/token | cut -d'"' -f 4)
+# docker login -u _token -p $ACCESS_TOKEN https://gcr.io
 
 SAUCE_USER=$(curl $METADATA/project/attributes/sauce_user -H "Metadata-Flavor: Google")
 SAUCE_KEY=$(curl $METADATA/project/attributes/sauce_key -H "Metadata-Flavor: Google")
