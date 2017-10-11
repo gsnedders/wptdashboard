@@ -1,16 +1,12 @@
 FROM python:2.7
 
-ADD . /
-
 RUN apt-get update
-RUN apt-get install -y git
+RUN apt-get install -y git sudo
+# sudo is needed for hosts_fixup
 
+# Pre-clone repos and pre-generate manifest.
+# Test runs will still need to pull and update
+# but this speeds up startup.
 RUN git clone https://github.com/w3c/wptdashboard.git
 RUN git clone https://github.com/w3c/web-platform-tests.git
-
-# Unnecessary
-RUN curl -O https://saucelabs.com/downloads/sc-4.4.9-linux.tar.gz \
-    && gunzip sc-4.4.9-linux.tar.gz \
-    && tar -xvf sc-4.4.9-linux.tar
-
 RUN /web-platform-tests/wpt manifest

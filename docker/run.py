@@ -26,21 +26,17 @@ def main():
         sauce_browser_name = platform['browser_name']
     product = 'sauce:%s:%s' % (sauce_browser_name, platform['browser_version'])
 
-    # patch_wpt(config, platform)
+    patch_wpt(config, platform)
 
     command = [
         './wpt', 'run', product,
         '--sauce-platform=%s' % platform['os_name'],
         '--sauce-key=%s' % config['sauce_key'],
         '--sauce-user=%s' % config['sauce_user'],
-        # There's a bug in wptrunner if you supply this
-        # By default it will download SC, which is okay
-        # '--sauce-connect-binary=%s' % config['sauce_connect_path'],
         '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
         '--no-restart-on-unexpected',
-        # '--processes=2',
+        # '--processes=2', # off for debugging so we don't use up
         '--run-by-dir=3',
-        '--no-manifest-update', # TODO JUST FOR DEBUGGING
         '--log-mach=-',
         '--log-wptreport=%s' % config['local_report_filepath'],
         '--install-fonts'
@@ -68,7 +64,7 @@ def patch_wpt(config, platform):
     jeffcarp has a PR out with this patch:
     https://github.com/w3c/web-platform-tests/pull/5774
     """
-    with open('/wptdashboard/wpt.patch') as f:
+    with open('/wptdashboard/util/wpt.patch') as f:
         patch = f.read()
 
     # The --sauce-platform command line arg doesn't
