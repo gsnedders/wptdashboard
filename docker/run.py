@@ -14,8 +14,8 @@ def main():
         'sauce_key': os.environ['SAUCE_KEY'],
         'sauce_user': os.environ['SAUCE_USER'],
         'sauce_tunnel_id': '%s_%s' % (platform_id, time.time()),
-        'wpt_path': os.path.expanduser('~/web-platform-tests'),
-        'local_report_filepath': os.path.expanduser('~/wptreport.log')
+        'wpt_path': '/web-platform-tests',
+        'local_report_filepath': '/wptreport.log'
     }
 
     # Hack because Sauce expects a different name
@@ -68,7 +68,7 @@ def patch_wpt(config, platform):
     jeffcarp has a PR out with this patch:
     https://github.com/w3c/web-platform-tests/pull/5774
     """
-    with open(os.path.expanduser('~/wptdashboard/wpt.patch')) as f:
+    with open('/wptdashboard/wpt.patch') as f:
         patch = f.read()
 
     # The --sauce-platform command line arg doesn't
