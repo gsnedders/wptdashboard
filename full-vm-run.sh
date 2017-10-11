@@ -1,7 +1,7 @@
-sudo apt-get update
-sudo apt-get install -y git python-pip
+apt-get update
+apt-get install -y git python-pip
 
-sudo pip install virtualenv
+pip install virtualenv
 
 git clone https://github.com/w3c/web-platform-tests.git
 git clone https://github.com/w3c/wptdashboard.git

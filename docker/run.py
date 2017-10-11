@@ -26,7 +26,7 @@ def main():
         sauce_browser_name = platform['browser_name']
     product = 'sauce:%s:%s' % (sauce_browser_name, platform['browser_version'])
 
-    patch_wpt(config, platform)
+    # patch_wpt(config, platform)
 
     command = [
         './wpt', 'run', product,
