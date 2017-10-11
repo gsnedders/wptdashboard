@@ -81,7 +81,7 @@ def patch_wpt(config, platform):
 
 
 def get_and_validate_platform():
-    with open('browsers.json') as f:
+    with open('/wptdashboard/browsers.json') as f:
         browsers = json.load(f)
 
     platform_id = os.environ['PLATFORM_ID']

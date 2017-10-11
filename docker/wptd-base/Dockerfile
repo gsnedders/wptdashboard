@@ -1,8 +1,9 @@
 FROM python:2.7
 
 RUN apt-get update
-RUN apt-get install -y git sudo
+
 # sudo is needed for hosts_fixup
+RUN apt-get install -y git sudo
 
 # Pre-clone repos and pre-generate manifest.
 # Test runs will still need to pull and update
