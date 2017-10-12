@@ -5,4 +5,4 @@ ADD . /
 # Expose Sauce Connect port
 EXPOSE 4445
 
-CMD ["/bin/bash", "/run.sh"]
+CMD ["/bin/bash", "/container-startup.sh"]
