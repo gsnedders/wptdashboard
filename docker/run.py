@@ -7,16 +7,17 @@ import time
 def main():
     platform_id, platform = get_and_validate_platform()
 
-    assert os.environ['SAUCE_KEY'], 'SAUCE_KEY env var required'
-    assert os.environ['SAUCE_USER'], 'SAUCE_USER env var required'
-
     config = {
-        'sauce_key': os.environ['SAUCE_KEY'],
-        'sauce_user': os.environ['SAUCE_USER'],
-        'sauce_tunnel_id': '%s_%s' % (platform_id, time.time()),
         'wpt_path': '/web-platform-tests',
         'local_report_filepath': '/wptreport.log'
     }
+
+    if platform.get('sauce'):
+        assert os.environ['SAUCE_KEY'], 'SAUCE_KEY env var required'
+        assert os.environ['SAUCE_USER'], 'SAUCE_USER env var required'
+        config['sauce_key'] = os.environ['SAUCE_KEY']
+        config['sauce_user'] = os.environ['SAUCE_USER']
+        config['sauce_tunnel_id'] = '%s_%s' % (platform_id, int(time.time()))
 
     # Hack because Sauce expects a different name
     # Maybe just change it in browsers.json?
@@ -28,21 +29,36 @@ def main():
 
     patch_wpt(config, platform)
 
-    command = [
-        './wpt', 'run', product,
-        '--sauce-platform=%s' % platform['os_name'],
-        '--sauce-key=%s' % config['sauce_key'],
-        '--sauce-user=%s' % config['sauce_user'],
-        '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
-        '--no-restart-on-unexpected',
-        # '--processes=2', # off for debugging so we don't use up
-        '--run-by-dir=3',
-        '--log-mach=-',
-        '--log-wptreport=%s' % config['local_report_filepath'],
-        '--install-fonts'
-    ]
-    if os.environ['RUN_PATH']:
-        command.insert(3, os.environ['RUN_PATH'])
+    if platform.get('sauce'):
+        command = [
+            './wpt', 'run', product,
+            '--sauce-platform=%s' % platform['os_name'],
+            '--sauce-key=%s' % config['sauce_key'],
+            '--sauce-user=%s' % config['sauce_user'],
+            '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
+            '--no-restart-on-unexpected',
+            # '--processes=2', # off for debugging so we don't use up
+            '--run-by-dir=3',
+            '--log-mach=-',
+            '--log-wptreport=%s' % config['local_report_filepath'],
+            '--install-fonts'
+        ]
+        if os.environ['RUN_PATH']:
+            command.insert(3, os.environ['RUN_PATH'])
+    else:
+        command = [
+            'xvfb-run', '--auto-servernum',
+            './wpt', 'run',
+            'firefox',
+            '--yes',
+            '--processes=2',
+            '--log-mach=-',
+            '--log-wptreport=%s' % config['local_report_filepath'],
+            '--install-fonts',
+            '--install-browser'
+        ]
+        if os.environ['RUN_PATH']:
+            command.insert(5, os.environ['RUN_PATH'])
 
     subprocess.call(command, cwd=config['wpt_path'])
 

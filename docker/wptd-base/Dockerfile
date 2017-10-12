@@ -2,8 +2,11 @@ FROM python:2.7
 
 RUN apt-get update
 
+RUN apt-get install -y git
 # sudo is needed for hosts_fixup
-RUN apt-get install -y git sudo
+RUN apt-get install -y sudo
+# xvfb is used for running FF and Chrome
+RUN apt-get install -y xvfb
 
 # Pre-clone repos and pre-generate manifest.
 # Test runs will still need to pull and update
