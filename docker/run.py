@@ -54,7 +54,7 @@ def main():
 
     summary = report_to_summary(report)
     print 'WOOOOOOOOOOOOOOOOOOOOOOO!!!!!'
-    print summary # TODO remove this before removing path!
+    print summary
 
 
 def patch_wpt(config, platform):
