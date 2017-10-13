@@ -28,6 +28,8 @@ docker run \
 
 Remove the `RUN_PATH` variable if you wish to run the whole suite.
 
+Add the `PROD_RUN=True` if you want the run to upload its results and create a TestRun. You can also pass `PROD_WET_RUN=True` which will do exactly the same thing but create a TestRun that won't show up in the dashboard (for integration testing).
+
 ## Push a new version to the registry
 
 Be advised this is dangerous as all builds use this container.
@@ -45,12 +47,14 @@ This starts a VM that runs a containerized test run and uploads the results.
 The VM startup script will automatically pull Sauce credentials from the GCE metadata store. You can pass additional args as metadata.
 
 ```sh
+PLATFORM_ID=edge-15-windows-10-sauce
 VM_NAME=test-vm-docker-run
+WPT_SHA=$(cd ~/gh/w3c/web-platform-tests && git rev-parse HEAD | head -c 10)
 gcloud compute instances create $VM_NAME \
     --metadata-from-file startup-script=vm-startup.sh \
-    --metadata PLATFORM_ID=edge-15-windows-10-sauce,RUN_PATH=gamepad \
+    --metadata PLATFORM_ID=$PLATFORM_ID,RUN_PATH=gamepad,WPT_SHA=$WPT_SHA \
     --zone us-central1-c \
-    --scopes=compute-rw
+    --scopes=compute-rw,storage-rw
 ```
 
 To view the logs:

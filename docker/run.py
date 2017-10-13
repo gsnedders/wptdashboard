@@ -2,9 +2,10 @@
 import json
 import gzip
 import os
+import platform
+import requests
 import subprocess
 import time
-import requests
 
 
 def main():
@@ -21,6 +22,7 @@ def main():
     }
 
     GSUTIL_BINARY = '/root/google-cloud-sdk/bin/gsutil'
+    GCLOUD_BINARY = '/root/google-cloud-sdk/bin/gcloud'
     WPT_PATH = '/web-platform-tests'
     PROD_HOST = 'https://wptdashboard.appspot.com'
     GS_RESULTS_BUCKET = 'wptd'
@@ -153,7 +155,7 @@ def main():
             'secret': args['upload_secret']
         },
         data=json.dumps({
-            'browser_name': platform['browser_name'],
+            'browser_name': final_browser_name,
             'browser_version': platform['browser_version'],
             'os_name': platform['os_name'],
             'os_version': platform['os_version'],
@@ -168,6 +170,14 @@ def main():
 
     print('Response status code:', response.status_code)
     print('Response text:', response.text)
+
+    print('==================================================')
+    print('Shutting down VM')
+    hostname = platform.node()
+    subprocess.call([
+      GCLOUD_BINARY, 'compute', 'instances', 'delete', hostname,
+      '--quiet', '--zone', 'us-central1-c'
+    ])
 
 
 def patch_wpt(wpt_path, platform):

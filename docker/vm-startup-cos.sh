@@ -13,23 +13,6 @@ SAUCE_USER=$(curl $METADATA/project/attributes/sauce_user -H "Metadata-Flavor: G
 SAUCE_KEY=$(curl $METADATA/project/attributes/sauce_key -H "Metadata-Flavor: Google")
 UPLOAD_SECRET=$(curl $METADATA/project/attributes/upload_secret -H "Metadata-Flavor: Google")
 
-# Install docker
-apt-get install -y \
-     apt-transport-https \
-     ca-certificates \
-     curl \
-     gnupg2 \
-     software-properties-common
-
-curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg | apt-key add -
-
-add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
-   $(lsb_release -cs) \
-   stable"
-apt-get update
-apt-get install -y docker-ce
-
 echo "PLATFORM_ID: $PLATFORM_ID"
 echo "RUN_PATH: $RUN_PATH"
 
@@ -42,9 +25,8 @@ docker run --rm \
     -e "PROD_WET_RUN=True" \
     -e "UPLOAD_SECRET=$UPLOAD_SECRET" \
     -p 4445:4445 \
+    --log-driver=gcplogs \
     gcr.io/wptdashboard/wptd-testrun
-# This doesn't work on debian by default
-#    --log-driver=gcplogs \
 
 # Delete the VM after use.
 ## gcloud compute instances delete $(hostname) --quiet --zone=us-central1-c
