@@ -35,6 +35,7 @@ Add the `PROD_RUN=True` if you want the run to upload its results and create a T
 Be advised this is dangerous as all builds use this container.
 
 ```sh
+docker build -t wptd-testrun .
 IMAGE_NAME=gcr.io/wptdashboard/wptd-testrun
 docker tag wptd-testrun $IMAGE_NAME
 gcloud docker -- push $IMAGE_NAME
@@ -56,6 +57,21 @@ gcloud compute instances create $VM_NAME \
     --zone us-central1-c \
     --scopes=compute-rw,storage-rw
 ```
+
+EXPERIMENTAL ===================
+
+run COS:
+
+gcloud compute instances create $VM_NAME \
+    --metadata-from-file startup-script=vm-startup-cos.sh \
+    --metadata PLATFORM_ID=$PLATFORM_ID,RUN_PATH=gamepad,WPT_SHA=$WPT_SHA \
+    --zone us-central1-c \
+    --scopes=compute-rw,storage-rw,cloud-platform \
+    --image-project cos-cloud \
+    --image cos-stable-55-8872-76-0
+
+tail the logs: journalctl -f
+END EXPERIMENTAL
 
 To view the logs:
 

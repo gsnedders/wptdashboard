@@ -3,6 +3,11 @@
 
 METADATA=http://metadata.google.internal/computeMetadata/v1
 
+# Log into Docker
+SVC_ACCT=$METADATA/instance/service-accounts/default
+ACCESS_TOKEN=$(curl -H 'Metadata-Flavor: Google' $SVC_ACCT/token | cut -d'"' -f 4)
+docker login -u _token -p $ACCESS_TOKEN https://gcr.io
+
 # These are expected to be passed in (RUN_PATH can be empty).
 PLATFORM_ID=$(curl $METADATA/instance/attributes/PLATFORM_ID -H "Metadata-Flavor: Google")
 RUN_PATH=$(curl $METADATA/instance/attributes/RUN_PATH -H "Metadata-Flavor: Google")

@@ -2,7 +2,7 @@
 import json
 import gzip
 import os
-import platform
+import platform as system_platform
 import requests
 import subprocess
 import time
@@ -173,11 +173,13 @@ def main():
 
     print('==================================================')
     print('Shutting down VM')
-    hostname = platform.node()
-    subprocess.call([
+    hostname = system_platform.node()
+    print('Hostname: %s' % hostname)
+    return_code = subprocess.call([
       GCLOUD_BINARY, 'compute', 'instances', 'delete', hostname,
       '--quiet', '--zone', 'us-central1-c'
     ])
+    print('Return code from GCE delete: %s' % return_code)
 
 
 def patch_wpt(wpt_path, platform):
