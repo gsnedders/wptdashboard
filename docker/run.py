@@ -15,18 +15,15 @@ def main():
         'prod_wet_run': bool(os.environ.get('PROD_WET_RUN', False)),
         'SHA': os.environ.get('WPT_SHA'),
         'upload_secret': os.environ.get('UPLOAD_SECRET'),
+        'sauce_key': os.environ.get('SAUCE_KEY', ''),
+        'sauce_user': os.environ.get('SAUCE_USER', ''),
         # TODO add sauce_* to args
     }
 
-    config = {
-        'wpt_path': '/web-platform-tests',
-        'local_report_filepath': '/wptreport.log',
-        'local_summary_gz_filepath': '/summary.json.gz',
-        'gs_results_filepath_base': '/results',
-        'gs_results_bucket': 'wptd',
-        'gsutil_binary': '/root/google-cloud-sdk/bin/gsutil',
-    }
-
+    GSUTIL_BINARY = '/root/google-cloud-sdk/bin/gsutil'
+    WPT_PATH = '/web-platform-tests'
+    PROD_HOST = 'https://wptdashboard.appspot.com'
+    GS_RESULTS_BUCKET = 'wptd'
     BUILD_PATH = '/build'
     LOCAL_REPORT_FILEPATH = "%s/wptd-%s-%s-report.log" % (
         BUILD_PATH, args['SHA'], platform_id
@@ -37,7 +34,7 @@ def main():
         BUILD_PATH, args['SHA'], platform_id
     )
     GS_HTTP_RESULTS_URL = 'https://storage.googleapis.com/%s/%s' % (
-        config['gs_results_bucket'], SUMMARY_PATH
+        GS_RESULTS_BUCKET, SUMMARY_PATH
     )
 
     if args['prod_run'] or args['prod_wet_run']:
@@ -45,15 +42,13 @@ def main():
 
     SUMMARY_FILENAME = '%s-%s-summary.json.gz' % (args['SHA'], platform_id)
     SUMMARY_HTTP_URL = 'https://storage.googleapis.com/%s/%s' % (
-        config['gs_results_bucket'], SUMMARY_FILENAME
+        GS_RESULTS_BUCKET, SUMMARY_FILENAME
     )
 
     if platform.get('sauce'):
-        assert os.environ['SAUCE_KEY'], 'SAUCE_KEY env var required'
-        assert os.environ['SAUCE_USER'], 'SAUCE_USER env var required'
-        config['sauce_key'] = os.environ['SAUCE_KEY']
-        config['sauce_user'] = os.environ['SAUCE_USER']
-        config['sauce_tunnel_id'] = '%s_%s' % (platform_id, int(time.time()))
+        assert args['sauce_key'], 'SAUCE_KEY env var required'
+        assert args['sauce_user'], 'SAUCE_USER env var required'
+        SAUCE_TUNNEL_ID = '%s_%s' % (platform_id, int(time.time()))
 
     assert len(args['SHA']) == 10, 'SHA must be the first 10 digits of the WPT SHA'
 
@@ -66,20 +61,20 @@ def main():
     product = 'sauce:%s:%s' % (sauce_browser_name, platform['browser_version'])
 
     # TODO check out args['SHA']!
-    patch_wpt(config, platform)
+    patch_wpt(WPT_PATH, platform)
 
     if platform.get('sauce'):
         command = [
             './wpt', 'run', product,
             '--sauce-platform=%s' % platform['os_name'],
-            '--sauce-key=%s' % config['sauce_key'],
-            '--sauce-user=%s' % config['sauce_user'],
-            '--sauce-tunnel-id=%s' % config['sauce_tunnel_id'],
+            '--sauce-key=%s' % args['sauce_key'],
+            '--sauce-user=%s' % args['sauce_user'],
+            '--sauce-tunnel-id=%s' % SAUCE_TUNNEL_ID,
             '--no-restart-on-unexpected',
             '--processes=2',
             '--run-by-dir=3',
             '--log-mach=-',
-            '--log-wptreport=%s' % config['local_report_filepath'],
+            '--log-wptreport=%s' % LOCAL_REPORT_FILEPATH,
             '--install-fonts'
         ]
         if os.environ['RUN_PATH']:
@@ -92,20 +87,20 @@ def main():
             '--yes',
             '--processes=2',
             '--log-mach=-',
-            '--log-wptreport=%s' % config['local_report_filepath'],
+            '--log-wptreport=%s' % LOCAL_REPORT_FILEPATH,
             '--install-fonts',
             '--install-browser'
         ]
         if os.environ['RUN_PATH']:
             command.insert(5, os.environ['RUN_PATH'])
 
-    return_code = subprocess.call(command, cwd=config['wpt_path'])
+    return_code = subprocess.call(command, cwd=WPT_PATH)
 
     print('==================================================')
     print('Finished WPT run')
     print('Return code from wptrunner: %s' % return_code)
 
-    with open(config['local_report_filepath']) as f:
+    with open(LOCAL_REPORT_FILEPATH) as f:
         report = json.load(f)
 
     assert len(report['results']) > 0, (
@@ -115,14 +110,14 @@ def main():
 
     print('==================================================')
     print('Writing summary.json.gz to local filesystem')
-    write_gzip_json(config['local_summary_gz_filepath'], summary)
-    print('Wrote file %s' % config['local_summary_gz_filepath'])
+    write_gzip_json(LOCAL_SUMMARY_GZ_FILEPATH, summary)
+    print('Wrote file %s' % LOCAL_SUMMARY_GZ_FILEPATH)
 
     print('==================================================')
     print('Writing individual result files to local filesystem')
     for result in report['results']:
         test_file = result['test']
-        filepath = '%s%s' % (config['gs_results_filepath_base'], test_file)
+        filepath = '%s%s' % (GS_RESULTS_FILEPATH_BASE, test_file)
         write_gzip_json(filepath, result)
         print('Wrote file %s' % filepath)
 
@@ -132,10 +127,10 @@ def main():
         return
 
     print('==================================================')
-    print('Uploading results to gs://%s' % config['gs_results_bucket'])
+    print('Uploading results to gs://%s' % GS_RESULTS_BUCKET)
 
     # TODO: change this from rsync to cp
-    command = [config['gsutil_binary'], '-m', '-h', 'Content-Encoding:gzip',
+    command = [GSUTIL_BINARY, '-m', '-h', 'Content-Encoding:gzip',
                'rsync', '-r', args['SHA'], 'gs://wptd/%s' % args['SHA']]
     return_code = subprocess.check_call(command, cwd=BUILD_PATH)
     assert return_code == 0
@@ -144,7 +139,7 @@ def main():
 
     print('==================================================')
     print('Creating new TestRun in the dashboard...')
-    url = '%s/test-runs' % config['wptd_prod_host']
+    url = '%s/test-runs' % PROD_HOST
 
     if args['prod_run']:
         final_browser_name = platform['browser_name']
@@ -175,7 +170,7 @@ def main():
     print('Response text:', response.text)
 
 
-def patch_wpt(config, platform):
+def patch_wpt(wpt_path, platform):
     """Applies util/wpt.patch to WPT.
 
     The patch is necessary to keep WPT running on long runs.
@@ -193,7 +188,7 @@ def patch_wpt(config, platform):
     )
 
     p = subprocess.Popen(
-        ['git', 'apply', '-'], cwd=config['wpt_path'], stdin=subprocess.PIPE
+        ['git', 'apply', '-'], cwd=wpt_path, stdin=subprocess.PIPE
     )
     p.communicate(input=patch)
 
