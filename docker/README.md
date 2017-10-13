@@ -51,11 +51,6 @@ gcloud compute instances create $VM_NAME \
     --metadata PLATFORM_ID=edge-15-windows-10-sauce,RUN_PATH=gamepad \
     --zone us-central1-c \
     --scopes=compute-rw
-
-
-
-#    --image-project cos-cloud \
-#    --image cos-stable-55-8872-76-0
 ```
 
 To view the logs:

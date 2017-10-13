@@ -4,7 +4,7 @@ import gzip
 import os
 import subprocess
 import time
-import requests # Need to install
+import requests
 
 
 def main():
