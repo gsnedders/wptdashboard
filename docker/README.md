@@ -48,36 +48,26 @@ This starts a VM that runs a containerized test run and uploads the results.
 The VM startup script will automatically pull Sauce credentials from the GCE metadata store. You can pass additional args as metadata.
 
 ```sh
-PLATFORM_ID=edge-15-windows-10-sauce
-VM_NAME=test-vm-docker-run
-WPT_SHA=$(cd ~/gh/w3c/web-platform-tests && git rev-parse HEAD | head -c 10)
 gcloud compute instances create $VM_NAME \
     --metadata-from-file startup-script=vm-startup.sh \
-    --metadata PLATFORM_ID=$PLATFORM_ID,RUN_PATH=gamepad,WPT_SHA=$WPT_SHA \
-    --zone us-central1-c \
-    --scopes=compute-rw,storage-rw
-```
-
-EXPERIMENTAL ===================
-
-run COS:
-
-gcloud compute instances create $VM_NAME \
-    --metadata-from-file startup-script=vm-startup-cos.sh \
     --metadata PLATFORM_ID=$PLATFORM_ID,RUN_PATH=gamepad,WPT_SHA=$WPT_SHA \
     --zone us-central1-c \
     --scopes=compute-rw,storage-rw,cloud-platform \
     --image-project cos-cloud \
     --image cos-stable-55-8872-76-0
+```
 
-tail the logs: journalctl -f
-END EXPERIMENTAL
+## Debugging
 
-To view the logs:
+To tail the logs (for startup script debugging):
 
 ```sh
 gcloud compute ssh $VM_NAME
+sudo journalctl -f
+```
 
-# In the VM
-tail -f /var/log/syslog
+Get a shell on the container:
+
+```sh
+docker run -it gcr.io/wptdashboard/wptd-testrun /bin/bash
 ```

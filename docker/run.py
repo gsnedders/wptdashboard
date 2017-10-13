@@ -2,7 +2,6 @@
 import json
 import gzip
 import os
-import platform as system_platform
 import requests
 import subprocess
 import time
@@ -18,6 +17,7 @@ def main():
         'upload_secret': os.environ.get('UPLOAD_SECRET'),
         'sauce_key': os.environ.get('SAUCE_KEY', ''),
         'sauce_user': os.environ.get('SAUCE_USER', ''),
+        'vm_name': os.environ.get('VM_NAME', ''),
         # TODO add sauce_* to args
     }
 
@@ -41,6 +41,7 @@ def main():
 
     if args['prod_run'] or args['prod_wet_run']:
       assert args['upload_secret'], 'UPLOAD_SECRET must be passed for a prod run.'
+      assert args['vm_name'], 'VM_NAME must be passed for a prod run.'
 
     SUMMARY_FILENAME = '%s-%s-summary.json.gz' % (args['SHA'], platform_id)
     SUMMARY_HTTP_URL = 'https://storage.googleapis.com/%s/%s' % (
@@ -173,10 +174,8 @@ def main():
 
     print('==================================================')
     print('Shutting down VM')
-    hostname = system_platform.node()
-    print('Hostname: %s' % hostname)
     return_code = subprocess.call([
-      GCLOUD_BINARY, 'compute', 'instances', 'delete', hostname,
+      GCLOUD_BINARY, 'compute', 'instances', 'delete', args['vm_name'],
       '--quiet', '--zone', 'us-central1-c'
     ])
     print('Return code from GCE delete: %s' % return_code)
