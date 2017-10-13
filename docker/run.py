@@ -80,22 +80,22 @@ def main():
             '--log-wptreport=%s' % LOCAL_REPORT_FILEPATH,
             '--install-fonts'
         ]
-        if os.environ['RUN_PATH']:
-            command.insert(3, os.environ['RUN_PATH'])
+        if os.environ.get('RUN_PATH'):
+            command.insert(3, os.environ.get('RUN_PATH'))
     else:
         command = [
             'xvfb-run', '--auto-servernum',
             './wpt', 'run',
-            'firefox',
+            platform['browser_name'],
+            '--install-fonts',
+            '--install-browser',
             '--yes',
             '--processes=2',
             '--log-mach=-',
             '--log-wptreport=%s' % LOCAL_REPORT_FILEPATH,
-            '--install-fonts',
-            '--install-browser'
         ]
-        if os.environ['RUN_PATH']:
-            command.insert(5, os.environ['RUN_PATH'])
+        if os.environ.get('RUN_PATH'):
+            command.insert(5, os.environ.get('RUN_PATH'))
 
     return_code = subprocess.call(command, cwd=WPT_PATH)
 
