@@ -1,27 +1,25 @@
 # Containerized builds
 
-In order to improve debugging cycle time, there are two containers:
+In order to improve deployability and test local reproducability, wpt.fyi runs its tests in a Docker container, `wptd-testrun`.
 
-- `wptd-base` - includes all necessary files
-- `wptd-testrun` - the final container for running the tests
-
-First build the base container.
-
-```sh
-cd docker/wptd-base
-docker build -t wptd-base .
-```
-
-Then you can build the test run container.
+### Building the container
 
 ```sh
 docker build -t wptd-testrun .
+```
 
+### Running the tests
+
+```sh
+PLATFORM_ID=edge-15-windows-10-sauce
 SAUCE_USER=rutabaga
 SAUCE_KEY=rutabaga
+WPT_SHA=$(cd ~/gh/w3c/web-platform-tests && git rev-parse HEAD | head -c 10)
 docker run \
-    -e "PLATFORM_ID=edge-15-windows-10-sauce" \
+    -e "PLATFORM_ID=$PLATFORM_ID" \
+    -e "WPT_SHA=$WPT_SHA" \
     -e "RUN_PATH=gamepad" \
+    -e "WPT_SHA=$WPT_SHA" \
     -e "SAUCE_USER=$SAUCE_USER" \
     -e "SAUCE_KEY=$SAUCE_KEY" \
     -p 4445:4445 \
