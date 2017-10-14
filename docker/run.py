@@ -18,7 +18,6 @@ def main():
         'sauce_key': os.environ.get('SAUCE_KEY', ''),
         'sauce_user': os.environ.get('SAUCE_USER', ''),
         'vm_name': os.environ.get('VM_NAME', ''),
-        # TODO add sauce_* to args
     }
 
     GSUTIL_BINARY = '/root/google-cloud-sdk/bin/gsutil'
@@ -27,6 +26,7 @@ def main():
     PROD_HOST = 'https://wptdashboard.appspot.com'
     GS_RESULTS_BUCKET = 'wptd'
     BUILD_PATH = '/build'
+    LOCAL_LOG_FILEPATH = '/wptd-testrun.log'
     LOCAL_REPORT_FILEPATH = "%s/wptd-%s-%s-report.log" % (
         BUILD_PATH, args['SHA'], platform_id
     )
@@ -90,8 +90,7 @@ def main():
             '--install-fonts',
             '--install-browser',
             '--yes',
-            '--processes=2',
-            '--log-mach=-',
+            '--log-mach=%s' % LOCAL_LOG_FILEPATH,
             '--log-wptreport=%s' % LOCAL_REPORT_FILEPATH,
         ]
         if os.environ.get('RUN_PATH'):
