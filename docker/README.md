@@ -67,13 +67,17 @@ This starts a VM that runs a containerized test run and uploads the results.
 The VM startup script will automatically pull Sauce credentials from the GCE metadata store. You can pass additional args as metadata.
 
 ```sh
+PLATFORM_ID=firefox-57.0-linux
+VM_NAME=$PLATFORM_ID-vm-$(date +%s)
+WPT_SHA=$(cd ~/gh/w3c/web-platform-tests && git rev-parse HEAD | head -c 10)
 gcloud compute instances create $VM_NAME \
     --metadata-from-file startup-script=vm-startup.sh \
     --metadata PLATFORM_ID=$PLATFORM_ID,WPT_SHA=$WPT_SHA \
     --zone us-central1-c \
     --scopes=compute-rw,storage-rw,cloud-platform \
     --image-project cos-cloud \
-    --image cos-stable-55-8872-76-0
+    --image cos-stable-55-8872-76-0 \
+    --machine-type=n1-standard-2
 ```
 
 ## Debugging

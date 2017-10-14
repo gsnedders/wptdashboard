@@ -8,6 +8,10 @@ import time
 
 
 def main():
+    # TODO somehow after --install browser verify browser
+    # version or change platform ID to correct browser version
+    # TODO report OS version when creating TestRun
+    # TODO actually check out correct WPT version
     platform_id, platform = get_and_validate_platform()
 
     args = {
