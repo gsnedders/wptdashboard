@@ -69,7 +69,7 @@ The VM startup script will automatically pull Sauce credentials from the GCE met
 ```sh
 gcloud compute instances create $VM_NAME \
     --metadata-from-file startup-script=vm-startup.sh \
-    --metadata PLATFORM_ID=$PLATFORM_ID,RUN_PATH=battery-status,WPT_SHA=$WPT_SHA \
+    --metadata PLATFORM_ID=$PLATFORM_ID,WPT_SHA=$WPT_SHA \
     --zone us-central1-c \
     --scopes=compute-rw,storage-rw,cloud-platform \
     --image-project cos-cloud \
