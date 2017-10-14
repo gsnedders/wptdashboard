@@ -40,8 +40,8 @@ def main():
     )
 
     if args['prod_run'] or args['prod_wet_run']:
-      assert args['upload_secret'], 'UPLOAD_SECRET must be passed for a prod run.'
-      assert args['vm_name'], 'VM_NAME must be passed for a prod run.'
+        assert args['upload_secret'], 'must pass UPLOAD_SECRET for prod run.'
+        assert args['vm_name'], 'must pass VM_NAME for prod run.'
 
     SUMMARY_FILENAME = '%s-%s-summary.json.gz' % (args['SHA'], platform_id)
     SUMMARY_HTTP_URL = 'https://storage.googleapis.com/%s/%s' % (
@@ -53,7 +53,7 @@ def main():
         assert args['sauce_user'], 'SAUCE_USER env var required'
         SAUCE_TUNNEL_ID = '%s_%s' % (platform_id, int(time.time()))
 
-    assert len(args['SHA']) == 10, 'SHA must be the first 10 digits of the WPT SHA'
+    assert len(args['SHA']) == 10, 'SHA must a WPT SHA[:10]'
 
     # Hack because Sauce expects a different name
     # Maybe just change it in browsers.json?
@@ -125,7 +125,7 @@ def main():
 
     if not (args['prod_run'] or args['prod_wet_run']):
         print('==================================================')
-        print('Stopping here (pass PROD_RUN env var to upload results to WPTD).')
+        print('Stopping here (pass PROD_RUN env var to upload results).')
         return
 
     print('==================================================')
