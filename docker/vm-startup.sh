@@ -24,7 +24,6 @@ echo "RUN_PATH: $RUN_PATH"
 docker run --rm \
     -e "PLATFORM_ID=$PLATFORM_ID" \
     -e "WPT_SHA=$WPT_SHA" \
-    -e "RUN_PATH=$RUN_PATH" \
     -e "SAUCE_USER=$SAUCE_USER" \
     -e "SAUCE_KEY=$SAUCE_KEY" \
     -e "PROD_WET_RUN=True" \
@@ -33,3 +32,6 @@ docker run --rm \
     -p 4445:4445 \
     --log-driver=gcplogs \
     gcr.io/wptdashboard/wptd-testrun
+
+# debugging: removing this
+#    -e "RUN_PATH=$RUN_PATH" \

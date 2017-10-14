@@ -78,6 +78,13 @@ gcloud compute instances create $VM_NAME \
 
 ## Debugging
 
+Watch the logs here:
+
+```
+VM_NAME=firefox-nightly-vm-1507940182
+open https://console.cloud.google.com/logs/viewer?project=wptdashboard&organizationId=433637338589&minLogLevel=0&expandAll=false&interval=NO_LIMIT&resource=global&logName=projects%2Fwptdashboard%2Flogs%2Fgcplogs-docker-driver&filters=jsonPayload.instance.name:$VM_NAME
+```
+
 To tail the logs (for startup script debugging):
 
 ```sh
@@ -89,4 +96,11 @@ Get a shell on the container:
 
 ```sh
 docker run -it gcr.io/wptdashboard/wptd-testrun /bin/bash
+```
+
+Get a shell on a running container:
+
+```sh
+docker ps
+docker exec -it $PROCESS_ID /bin/bash
 ```
