@@ -25,6 +25,19 @@ matrix:
         - pycodestyle .
         - python -m unittest discover -p "*_test.py"
 
+    - language: python
+      python: 2.7
+      services:
+        - docker
+      install:
+        - docker build -t wptd-testrun ./docker
+      env:
+        - PLATFORM_ID=firefox-57.0-linux
+        - WPT_SHA=0e906f0595
+        - RUN_PATH=battery-status
+      script:
+        - docker run -e "PLATFORM_ID=$PLATFORM_ID" -e "WPT_SHA=$WPT_SHA" -e "RUN_PATH=$RUN_PATH" wptd-testrun
+
     - language: go
       install:
         - go get -t ./...

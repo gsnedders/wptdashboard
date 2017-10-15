@@ -24,7 +24,6 @@ docker run \
     -e "PLATFORM_ID=$PLATFORM_ID" \
     -e "WPT_SHA=$WPT_SHA" \
     -e "RUN_PATH=$RUN_PATH" \
-    -e "WPT_SHA=$WPT_SHA" \
     -e "SAUCE_USER=$SAUCE_USER" \
     -e "SAUCE_KEY=$SAUCE_KEY" \
     -p 4445:4445 \
@@ -45,7 +44,6 @@ docker run \
     -e "PLATFORM_ID=$PLATFORM_ID" \
     -e "WPT_SHA=$WPT_SHA" \
     -e "RUN_PATH=$RUN_PATH" \
-    -e "WPT_SHA=$WPT_SHA" \
     wptd-testrun
 ```
 
