@@ -1,9 +1,7 @@
-FROM jenkinsci/jnlp-slave
+#FROM jenkinsci/jnlp-slave
+FROM gcr.io/cloud-solutions-images/jenkins-k8s-slave
 
 USER root
-
-ADD . /
-RUN mkdir /build
 
 # Expose Sauce Connect port
 EXPOSE 4445
@@ -13,6 +11,7 @@ RUN apt-get update
 # wpt run dependencies
 RUN apt-get install -y python-pip
 RUN pip install virtualenv
+RUN pip install 'requests==2.13.0'
 
 RUN apt-get install -y git
 
@@ -28,21 +27,9 @@ RUN apt-get install -y \
     libgtk-3-common \
     libdbus-glib-1-2
 
-USER jenkins
+RUN mkdir /build
+ADD . /build
+ADD ./MANIFEST.json /build/MANIFEST.json
+RUN chown -R jenkins:jenkins /build
 
-# Install Google Cloud SDK for uploading results with gsutil and
-# terminating the instance.
-RUN curl -sSL https://sdk.cloud.google.com | bash
-RUN /home/jenkins/google-cloud-sdk/bin/gcloud components install kubectl
-# RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
-# RUN chmod +x ./kubectl
-#RUN mv ./kubectl /usr/local/bin/kubectl
-
-
-# TODO: Re-enable this after debugging
-# RUN git clone https://github.com/w3c/wptdashboard.git
-
-# RUN git clone https://github.com/w3c/web-platform-tests.git
-# RUN /web-platform-tests/wpt manifest
-
-RUN pip install 'requests==2.13.0'
+#RUN git clone https://github.com/w3c/wptdashboard.git /home/jenkins/wptdashboard

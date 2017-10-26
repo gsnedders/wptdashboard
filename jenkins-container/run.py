@@ -5,14 +5,17 @@ import os
 import requests
 import subprocess
 import time
+import re
 
 
 def main():
     # TODO somehow after --install browser verify browser
     # version or change platform ID to correct browser version
+    # This can be done by running `wpt install firefox` and then verifying
+
     # TODO report OS version when creating TestRun
-    # TODO actually check out correct WPT version
-    platform_id, platform = get_and_validate_platform()
+
+    # TODO record WPT revision inside test run
 
     args = {
         'prod_run': bool(os.environ.get('PROD_RUN', False)),
@@ -21,12 +24,23 @@ def main():
         'upload_secret': os.environ.get('UPLOAD_SECRET'),
         'sauce_key': os.environ.get('SAUCE_KEY', ''),
         'sauce_user': os.environ.get('SAUCE_USER', ''),
-        'vm_name': os.environ.get('VM_NAME', ''),
+        'jenkins_job_name': os.environ.get('JOB_NAME'),
+        'wpt_path': os.environ.get('WPT_PATH'),
+        'build_path': os.environ.get('BUILD_PATH'),
+        'run_path': os.environ.get('RUN_PATH', ''),
     }
 
+    # Arg validation
+    assert args['wpt_path'], '`WPT_PATH` env var required.'
+    assert not args['wpt_path'].endswith('/'), '`WPT_PATH` cannot end with /.'
+    assert args['build_path'], '`BUILD_PATH` env var required.'
+    assert not args['build_path'].endswith('/'), '`BUILD_PATH` cannot end with /.'
+    if args['prod_run'] or args['prod_wet_run']:
+        assert args['upload_secret'], 'must pass UPLOAD_SECRET for prod run.'
+
+    platform_id, platform = get_and_validate_platform(args['build_path'])
+
     GSUTIL_BINARY = '/root/google-cloud-sdk/bin/gsutil'
-    GCLOUD_BINARY = '/root/google-cloud-sdk/bin/gcloud'
-    WPT_PATH = '/web-platform-tests'
     PROD_HOST = 'https://wptdashboard.appspot.com'
     GS_RESULTS_BUCKET = 'wptd'
     BUILD_PATH = '/build'
@@ -42,10 +56,6 @@ def main():
     GS_HTTP_RESULTS_URL = 'https://storage.googleapis.com/%s/%s' % (
         GS_RESULTS_BUCKET, SUMMARY_PATH
     )
-
-    if args['prod_run'] or args['prod_wet_run']:
-        assert args['upload_secret'], 'must pass UPLOAD_SECRET for prod run.'
-        assert args['vm_name'], 'must pass VM_NAME for prod run.'
 
     SUMMARY_FILENAME = '%s-%s-summary.json.gz' % (args['SHA'], platform_id)
     SUMMARY_HTTP_URL = 'https://storage.googleapis.com/%s/%s' % (
@@ -67,8 +77,7 @@ def main():
         sauce_browser_name = platform['browser_name']
     product = 'sauce:%s:%s' % (sauce_browser_name, platform['browser_version'])
 
-    # TODO check out args['SHA']!
-    patch_wpt(WPT_PATH, platform)
+    patch_wpt(args['build_path'], args['wpt_path'], platform)
 
     if platform.get('sauce'):
         command = [
@@ -84,8 +93,8 @@ def main():
             '--log-wptreport=%s' % LOCAL_REPORT_FILEPATH,
             '--install-fonts'
         ]
-        if os.environ.get('RUN_PATH'):
-            command.insert(3, os.environ.get('RUN_PATH'))
+        if args['run_path']:
+            command.insert(3, args['run_path'])
     else:
         command = [
             'xvfb-run', '--auto-servernum',
@@ -97,10 +106,19 @@ def main():
             '--log-mach=%s' % LOCAL_LOG_FILEPATH,
             '--log-wptreport=%s' % LOCAL_REPORT_FILEPATH,
         ]
-        if os.environ.get('RUN_PATH'):
-            command.insert(5, os.environ.get('RUN_PATH'))
+        if args['run_path']:
+            command.insert(5, args['run_path'])
 
-    return_code = subprocess.call(command, cwd=WPT_PATH)
+    if args['jenkins_job_name']:
+        # Expects a job name like chunk_2_of_4
+        chunks = re.findall(r'(\d+)_of_(\d+)', args['jenkins_job_name'])
+        chunk_num, total_chunks = chunks[0]
+        command.extend([
+            '--this-chunk=%s' % chunk_num,
+            '--total-chunks=%s' % total_chunks,
+        ])
+
+    return_code = subprocess.call(command, cwd=args['wpt_path'])
 
     print('==================================================')
     print('Finished WPT run')
@@ -138,7 +156,7 @@ def main():
     # TODO: change this from rsync to cp
     command = [GSUTIL_BINARY, '-m', '-h', 'Content-Encoding:gzip',
                'rsync', '-r', args['SHA'], 'gs://wptd/%s' % args['SHA']]
-    return_code = subprocess.check_call(command, cwd=BUILD_PATH)
+    return_code = subprocess.check_call(command, cwd=args['build_path'])
     assert return_code == 0
     print('Successfully uploaded!')
     print('HTTP summary URL: %s' % GS_HTTP_RESULTS_URL)
@@ -175,23 +193,15 @@ def main():
     print('Response status code:', response.status_code)
     print('Response text:', response.text)
 
-    print('==================================================')
-    print('Shutting down VM')
-    return_code = subprocess.call([
-      GCLOUD_BINARY, 'compute', 'instances', 'delete', args['vm_name'],
-      '--quiet', '--zone', 'us-central1-c'
-    ])
-    print('Return code from GCE delete: %s' % return_code)
 
-
-def patch_wpt(wpt_path, platform):
+def patch_wpt(build_path, wpt_path, platform):
     """Applies util/wpt.patch to WPT.
 
     The patch is necessary to keep WPT running on long runs.
     jeffcarp has a PR out with this patch:
     https://github.com/w3c/web-platform-tests/pull/5774
     """
-    with open('/wptdashboard/util/wpt.patch') as f:
+    with open('%s/wpt.patch' % build_path) as f:
         patch = f.read()
 
     # The --sauce-platform command line arg doesn't
@@ -207,8 +217,8 @@ def patch_wpt(wpt_path, platform):
     p.communicate(input=patch)
 
 
-def get_and_validate_platform():
-    with open('/wptdashboard/browsers.json') as f:
+def get_and_validate_platform(build_path):
+    with open('%s/browsers.json' % build_path) as f:
         browsers = json.load(f)
 
     platform_id = os.environ['PLATFORM_ID']
