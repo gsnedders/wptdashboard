@@ -109,7 +109,7 @@ def main():
         if args['run_path']:
             command.insert(5, args['run_path'])
 
-    if args['jenkins_job_name']:
+    if args['jenkins_job_name'] and '_of_' in args['jenkins_job_name']:
         # Expects a job name like chunk_2_of_4
         chunks = re.findall(r'(\d+)_of_(\d+)', args['jenkins_job_name'])
         chunk_num, total_chunks = chunks[0]
