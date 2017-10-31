@@ -1,4 +1,3 @@
-#FROM jenkinsci/jnlp-slave
 FROM gcr.io/cloud-solutions-images/jenkins-k8s-slave
 
 USER root
@@ -27,9 +26,7 @@ RUN apt-get install -y \
     libgtk-3-common \
     libdbus-glib-1-2
 
-RUN mkdir /build
-ADD . /build
-ADD ./MANIFEST.json /build/MANIFEST.json
-RUN chown -R jenkins:jenkins /build
+RUN mkdir /wptdashboard
+ADD . /wptdashboard
 
-#RUN git clone https://github.com/w3c/wptdashboard.git /home/jenkins/wptdashboard
+RUN chown -R jenkins:jenkins /wptdashboard

@@ -252,7 +252,7 @@ def main(platform_id, platform, args, config):
 
 
 def get_and_validate_platform(platform_id):
-    with open('browsers.json') as f:
+    with open('/wptdashboard/browsers.json') as f:
         browsers = json.load(f)
 
     assert platform_id in browsers, 'platform_id not found in browsers.json'
@@ -374,7 +374,7 @@ def patch_wpt(config, platform):
     jeffcarp has a PR out with this patch:
     https://github.com/w3c/web-platform-tests/pull/5774
     """
-    patch_path = '%s/util/wpt.patch' % config['wptd_path']
+    patch_path = '/wptdashboard/%s/util/wpt.patch' % config['wptd_path']
     with open(patch_path) as f:
         patch = f.read()
 

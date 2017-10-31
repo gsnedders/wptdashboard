@@ -201,7 +201,7 @@ def patch_wpt(build_path, wpt_path, platform):
     jeffcarp has a PR out with this patch:
     https://github.com/w3c/web-platform-tests/pull/5774
     """
-    with open('%s/wpt.patch' % build_path) as f:
+    with open('%s/util/wpt.patch' % build_path) as f:
         patch = f.read()
 
     # The --sauce-platform command line arg doesn't
